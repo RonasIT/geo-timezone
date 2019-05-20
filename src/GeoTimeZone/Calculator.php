@@ -10,7 +10,7 @@ use GeoTimeZone\Quadrant\Tree;
 class Calculator
 {
     protected $quadrantTree;
-    
+
     /**
      * TimeZone constructor.
      * @param $dataDirectory
@@ -21,11 +21,11 @@ class Calculator
         if (isset($dataDirectory) && is_dir($dataDirectory)) {
             $this->quadrantTree = new Tree($dataDirectory);
             $this->quadrantTree->initializeDataTree();
-        }else{
+        } else {
             throw new ErrorException('Invalid data tree directory: ' . $dataDirectory);
         }
     }
-    
+
     /**
      * Adjust the latitude value
      * @param $latitude
@@ -38,12 +38,14 @@ class Calculator
         if (null == $latitude || abs($latitude) > Tree::MAX_ABS_LATITUDE) {
             throw new ErrorException('Invalid latitude: ' . $latitude);
         }
+
         if (abs($latitude) == Tree::MAX_ABS_LATITUDE) {
             $newLatitude = ($latitude <=> 0) * Tree::ABS_LATITUDE_LIMIT;
         }
+
         return $newLatitude;
     }
-    
+
     /**
      * Adjust longitude value
      * @param $longitude
@@ -56,12 +58,14 @@ class Calculator
         if (null == $longitude || abs($longitude) > Tree::MAX_ABS_LONGITUDE) {
             throw new ErrorException('Invalid longitude: ' . $longitude);
         }
+
         if (abs($longitude) == Tree::MAX_ABS_LONGITUDE) {
             $newLongitude = ($longitude <=> 0) * Tree::ABS_LONGITUDE_LIMIT;
         }
+
         return $newLongitude;
     }
-    
+
     /**
      * Get timezone name from a particular location (latitude, longitude)
      * @param $latitude
@@ -76,12 +80,13 @@ class Calculator
             $latitude = $this->adjustLatitude($latitude);
             $longitude = $this->adjustLongitude($longitude);
             $timeZone = $this->quadrantTree->lookForTimezone($latitude, $longitude);
-        }catch (ErrorException $error){
+        } catch (ErrorException $error) {
             throw $error;
         }
+
         return $timeZone;
     }
-    
+
     /**
      * Get the local date belonging to a particular latitude, longitude and timestamp
      * @param $latitude
@@ -95,16 +100,19 @@ class Calculator
         $date = new DateTime();
         try {
             $timeZone = $this->getTimeZoneName($latitude, $longitude);
+
             $date->setTimestamp($timestamp);
+
             if ($timeZone != Tree::NONE_TIMEZONE) {
                 $date->setTimezone(new DateTimeZone($timeZone));
             }
-        }catch (ErrorException $error){
+        } catch (ErrorException $error) {
             throw $error;
         }
+
         return $date;
     }
-    
+
     /**
      * Get timestamp from latitude, longitude and localTimestamp
      * @param $latitude
@@ -121,15 +129,17 @@ class Calculator
             if ($timeZoneName != Tree::NONE_TIMEZONE) {
                 $date = new DateTime();
                 $date->setTimestamp($localTimestamp);
+
                 if ($timeZoneName != null) {
                     $date->setTimezone(new DateTimeZone($timeZoneName));
                 }
-                $timestamp = $date->getOffset() != false ? $localTimestamp - $date->getOffset() : $localTimestamp;
+
+                $timestamp = ($date->getOffset() != false) ? $localTimestamp - $date->getOffset() : $localTimestamp;
             }
-        }catch(ErrorException $error){
+        } catch (ErrorException $error) {
             throw $error;
         }
+
         return $timestamp;
     }
 }
-
